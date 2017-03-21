@@ -9,7 +9,7 @@ setup(
             ['mini-mailgun = mini_mailgun.api.run:run_server']},
     include_package_data=True,
     zip_safe=False,
-    install_requires=['Flask-SQLAlchemy', 'jsonschema',
+    install_requires=['Flask-SQLAlchemy', 'jsonschema', 'dnspython',
                       'mysql-python', 'requests', 'redis',
                       'celery', 'gevent', 'flask', 'alembic'],
     author="Conrad Weidenkeller",

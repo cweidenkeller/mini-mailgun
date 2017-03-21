@@ -28,16 +28,16 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_get_emails(self, mock_get):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 200
-        m_response.json = mock.MagicMock(return_value=['asdf'])
+        m_response.json = mock.Mock(return_value=['asdf'])
         mock_get.return_value = m_response
         res = self.c.get_emails()
         self.assertEquals('asdf', res[0])
 
     @mock.patch('requests.get')
     def test_get_emails_400(self, mock_get):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 400
         mock_get.return_value = m_response
         with self.assertRaises(ClientExceptionError):
@@ -45,7 +45,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_get_emails_500(self, mock_get):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 500
         mock_get.return_value = m_response
         with self.assertRaises(ServerExceptionError):
@@ -53,9 +53,9 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_get_email(self, mock_get):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 200
-        m_response.json = mock.MagicMock(return_value=self.message)
+        m_response.json = mock.Mock(return_value=self.message)
         mock_get.return_value = m_response
         res = self.c.get_email('from')
         self.assertEquals(res.uuid, 'uuid')
@@ -72,7 +72,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_get_email_400(self, mock_get):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 400
         mock_get.return_value = m_response
         with self.assertRaises(ClientExceptionError):
@@ -80,7 +80,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.get')
     def test_get_email_500(self, mock_get):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 500
         mock_get.return_value = m_response
         with self.assertRaises(ServerExceptionError):
@@ -88,9 +88,9 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_send_email(self, mock_post):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 200
-        m_response.json = mock.MagicMock(return_value=self.message)
+        m_response.json = mock.Mock(return_value=self.message)
         mock_post.return_value = m_response
         res = self.c.send_email('from', 'to', 'sub', 'body')
         self.assertEquals(res.uuid, 'uuid')
@@ -107,7 +107,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_send_email_400(self, mock_post):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 400
         mock_post.return_value = m_response
         with self.assertRaises(ClientExceptionError):
@@ -115,7 +115,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_send_email_500(self, mock_post):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 500
         mock_post.return_value = m_response
         with self.assertRaises(ServerExceptionError):
@@ -123,16 +123,16 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.delete')
     def test_delete_email(self, mock_delete):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 200
-        m_response.json = mock.MagicMock(return_value=self.message)
+        m_response.json = mock.Mock(return_value=self.message)
         mock_delete.return_value = m_response
         self.c.delete_email('from')
         mock_delete.assert_called_with('http://asdf:80/v1/email/from')
 
     @mock.patch('requests.delete')
     def test_delete_email_400(self, mock_delete):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 400
         mock_delete.return_value = m_response
         with self.assertRaises(ClientExceptionError):
@@ -140,7 +140,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.delete')
     def test_delete_email_409(self, mock_delete):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 409
         mock_delete.return_value = m_response
         with self.assertRaises(MessageAlreadySentOrFailedError):
@@ -148,7 +148,7 @@ class ClientTestCase(unittest.TestCase):
 
     @mock.patch('requests.delete')
     def test_delete_email_500(self, mock_delete):
-        m_response = mock.MagicMock()
+        m_response = mock.Mock()
         m_response.status_code = 500
         mock_delete.return_value = m_response
         with self.assertRaises(ServerExceptionError):

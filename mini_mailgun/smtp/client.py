@@ -20,17 +20,10 @@ class MiniMailgunSMTP(SMTP):
             host (str): SMTP host you with to connect to.
             port (int): The port on the SMTP host
                         you would like to connect over.
-        Kwargs:
-            None
-        Raises:
-            None
-        Returns:
-            None
         """
         SMTP.__init__(self, host, port)
 
-    def sendmail_get_status(self, from_addr, to_addr, msg,
-                            mail_options=[], rcpt_options=[]):
+    def sendmail_get_status(self, from_addr, to_addr, msg):
         """
         Modified version of the SMTP sendmail method.
         It no longer supports multiple to_addrs.
@@ -38,35 +31,22 @@ class MiniMailgunSMTP(SMTP):
             from_addr (str): The sender's email address.
             to_addr (str): The recipiant's email address.
             msg (str): The email message.
-        Kwargs:
-            mail_options (list): Additional email options.
-                                 Defaults to an empty list.
-            rcpt_options (list): Recipiant options.
-                                 Defaults to an empty list.
-        Raises:
-            None
         Returns:
             (dict): A dictionary of the last SMTP status code
                 and the servers last status message.
         """
         self.ehlo_or_helo_if_needed()
-        esmtp_opts = []
-        if self.does_esmtp:
-            if self.has_extn('size'):
-                esmtp_opts.append("size=%d" % len(msg))
-            for option in mail_options:
-                esmtp_opts.append(option)
-        (code, resp) = self.mail(from_addr, esmtp_opts)
-        if code != 250:
-            self.rset()
+        try:
+            (code, resp) = self.mail(from_addr)
+            if code != 250:
+                return {'code': code, 'message': resp}
+            (code, resp) = self.rcpt(to_addr)
+            if (code != 250) and (code != 251):
+                return {'code': code, 'message': resp}
+            (code, resp) = self.data(msg)
             return {'code': code, 'message': resp}
-        (code, resp) = self.rcpt(to_addr, rcpt_options)
-        if (code != 250) and (code != 251):
+        finally:
             self.rset()
-            return {'code': code, 'message': resp}
-        (code, resp) = self.data(msg)
-        self.rset()
-        return {'code': code, 'message': resp}
 
 
 class Client():
@@ -87,10 +67,6 @@ class Client():
             password (str): The password of the user using SMTP auth.
                             Defaults to None.
             use_tls (bool): Enable to use tls connections. Defaults to False.
-        Raises:
-            None
-        Returns:
-            None
         """
         self.host = host
         self.port = port
@@ -108,8 +84,6 @@ class Client():
             None
         Raises:
             mini_mailgun.exceptions.SMTPClientError
-        Returns:
-            None
         """
         try:
             self._smtp_connection = MiniMailgunSMTP(self.host, self.port)
@@ -125,30 +99,20 @@ class Client():
     def quit(self):
         """
         Close an SMTP connection.
-        Args:
-            None
-        Kwargs:
-            None
-        Raises:
-            None
-        Returns:
-            None
         """
         self._smtp_connection.quit()
 
-    def send_message(self, message):
+    def send_message(self, from_addr, to_addr, message):
         """
-        Send an email message. From a previously setup Message object.
+        Send an email message.
         Args:
-            message (mini_mailgun.message.Message)
-        Kwargs:
-            None
-        Raises:
-            None
+            from_addr (str): The sender's address.
+            to_addr (str): The recipiant's address.
+            message (str): A well formed email message.
         Returns:
             (dict): A dict containing status code
                     and last message from the server.
         """
-        return self._smtp_connection.sendmail_get_status(message.from_addr,
-                                                         message.to_addr,
-                                                         message.email_message)
+        return self._smtp_connection.sendmail_get_status(from_addr,
+                                                         to_addr,
+                                                         message)

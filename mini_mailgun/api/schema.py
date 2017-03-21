@@ -1,6 +1,7 @@
 """
 JSON Schema module
 """
+from flask import abort
 from jsonschema import validate, FormatChecker
 
 send_email = {'$schema': 'http://json-schema.org/draft-04/schema#',
@@ -26,9 +27,10 @@ def validate_send_email(data):
     Validate send_email payload based of JSON schema def.
     Args:
         data (dict) JSON payload for request.
-    Kwargs:
-        None
     Raises:
         (jsonschema.ValidationError) When payload is not valid.
     """
-    validate(data, send_email, format_checker=FormatChecker())
+    try:
+        validate(data, send_email, format_checker=FormatChecker())
+    except:
+        abort(400)
