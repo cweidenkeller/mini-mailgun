@@ -1,13 +1,9 @@
 """
 Database models.
 """
-from cStringIO import StringIO
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.header import Header
-from email.generator import Generator
-
 import json
+
+from flanker.mime import create
 
 from mini_mailgun.api.db import db
 from mini_mailgun.common import utc_time, uuid
@@ -74,16 +70,8 @@ class Email(db.Model):
         Returns:
             (u'str') Well formed email message.
         """
-        multipart = MIMEMultipart('alternative')
-        multipart['Subject'] = Header(self.subject.encode('utf-8'),
-                                      'UTF-8').encode()
-        multipart['To'] = Header(self.to_addr.encode('utf-8'),
-                                 'UTF-8').encode()
-        multipart['From'] = Header(self.from_addr.encode('utf-8'),
-                                   'UTF-8').encode()
-        textpart = MIMEText(self.body.encode('utf-8'), 'plain', 'UTF-8')
-        multipart.attach(textpart)
-        io = StringIO()
-        g = Generator(io, False)
-        g.flatten(multipart)
-        return io.getvalue()
+        message = create.text("plain", self.body)
+        message.headers['From'] = self.from_addr
+        message.headers['To'] = self.to_addr
+        message.headers['Subject'] = self.subject
+        return message.to_string()

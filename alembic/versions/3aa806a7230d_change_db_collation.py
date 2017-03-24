@@ -16,12 +16,15 @@ branch_labels = None
 depends_on = None
 
 
-
-
 def upgrade():
     conn = op.get_bind()
-    conn.execute(sa.sql.text('ALTER table email CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci'))
+    conn.execute(sa.sql.text(('ALTER table email '
+                              'CONVERT TO CHARACTER SET utf8 '
+                              'COLLATE utf8_general_ci')))
+
 
 def downgrade():
     conn = op.get_bind()
-    conn.execute(sa.sql.text('ALTER table email CONVERT TO CHARACTER SET latin1 COLLATE latin1_swedish_ci'))
+    conn.execute(sa.sql.text(('ALTER table email '
+                              'CONVERT TO CHARACTER SET latin1 '
+                              'COLLATE latin1_swedish_ci')))
