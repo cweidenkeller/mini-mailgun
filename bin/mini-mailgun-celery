@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+celery -A mini_mailgun.api.tasks.celery_app worker
