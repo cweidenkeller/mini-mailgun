@@ -78,7 +78,7 @@ class APITestCase(unittest.TestCase):
         self.assertEqual('[]', rv.data)
         rv = self.client.post('/v1/email', data=self.good_body,
                               content_type='application/json')
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(202, rv.status_code)
         message = self._get_message(rv.data)
         rv = self.client.get('/v1/email')
         self.assertEqual(200, rv.status_code)
@@ -87,7 +87,7 @@ class APITestCase(unittest.TestCase):
     def test_send_email(self):
         rv = self.client.post('/v1/email', data=self.good_body,
                               content_type='application/json')
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(202, rv.status_code)
         message = self._get_message(rv.data)
         self.assertEqual(message.from_addr, 'conrad@notkeller.com')
         self.assertEqual(message.to_addr, 'conrad@weidenkeller.com')
@@ -148,7 +148,7 @@ class APITestCase(unittest.TestCase):
     def test_get_email(self):
         rv = self.client.post('/v1/email', data=self.good_body,
                               content_type='application/json')
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(202, rv.status_code)
         message = self._get_message(rv.data)
         rv = self.client.get('/v1/email/' + message.uuid)
         message = self._get_message(rv.data)
@@ -171,7 +171,7 @@ class APITestCase(unittest.TestCase):
     def test_delete_email(self):
         rv = self.client.post('/v1/email', data=self.good_body,
                               content_type='application/json')
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(202, rv.status_code)
         message = self._get_message(rv.data)
         rv = self.client.delete('/v1/email/' + message.uuid)
         self.assertEqual(200, rv.status_code)
@@ -183,7 +183,7 @@ class APITestCase(unittest.TestCase):
     def test_get_email_already_sent(self):
         rv = self.client.post('/v1/email', data=self.good_body,
                               content_type='application/json')
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(202, rv.status_code)
         message = self._get_message(rv.data)
         with self.app.app_context():
             email = Email.query.filter_by(uuid=message.uuid).first()
@@ -196,7 +196,7 @@ class APITestCase(unittest.TestCase):
     def test_get_email_already_failed(self):
         rv = self.client.post('/v1/email', data=self.good_body,
                               content_type='application/json')
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(202, rv.status_code)
         message = self._get_message(rv.data)
         with self.app.app_context():
             email = Email.query.filter_by(uuid=message.uuid).first()

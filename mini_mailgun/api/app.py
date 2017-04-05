@@ -16,8 +16,6 @@ def create_app(register_blueprint=True):
     Kwargs:
         register_blueprint (bool): Used to initalize celery to avoid
                                    circular imports.
-    Raises:
-        None
     Returns:
         A flask application.
     """
@@ -33,12 +31,6 @@ def create_app(register_blueprint=True):
 def get_db():
     """
     Get a database session.
-    Args:
-        None
-    Kwargs:
-        None
-    Raises:
-        None
     Returns:
         A flask-sqlalchemy database object.
     """
@@ -48,15 +40,11 @@ def get_db():
     return db
 
 
-def get_logger(mname):
+def create_logger(mname):
     """
     Get a logger object.
     Args:
         mname (str): generally the __name__ of the current module.
-    Kwargs:
-        None
-    Raises:
-        None
     Returns:
         A python logger object.
     """

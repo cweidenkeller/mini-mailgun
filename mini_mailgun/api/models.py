@@ -3,9 +3,11 @@ Database models.
 """
 import json
 
+from flanker.mime import create
+
 from mini_mailgun.api.db import db
 from mini_mailgun.common import utc_time, uuid
-from mini_mailgun.message import Message
+from mini_mailgun.constants import STATUS_SENDING
 
 
 class Email(db.Model):
@@ -16,12 +18,12 @@ class Email(db.Model):
     from_addr = db.Column(db.String(256), nullable=False)
     to_addr = db.Column(db.String(256), nullable=False)
     subject = db.Column(db.String(78), nullable=False)
-    body = db.Column(db.Text, nullable=False)
+    body = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
     last_attempt = db.Column(db.DateTime, nullable=True)
     attempts = db.Column(db.Integer, nullable=False, default=0)
-    status = db.Column(db.String(10), nullable=False, default="SENDING")
+    status = db.Column(db.String(10), nullable=False, default=STATUS_SENDING)
     status_code = db.Column(db.Integer, nullable=True)
 
     def __init__(self, from_addr, to_addr, subject, body):
@@ -32,12 +34,6 @@ class Email(db.Model):
             to_addr (str): The recipient's email address.
             subject (str): The subject of the email.
             body (str): The body of the message.
-        Kwargs:
-            None
-        Raises:
-            None
-        Returns:
-            None
         """
         if not self.uuid:
             self.uuid = uuid()
@@ -52,12 +48,6 @@ class Email(db.Model):
         """
         Get the json representation of this model. Used for sending info
         via the rest api.
-        Args:
-            None
-        Kwargs:
-            None
-        Raises:
-            None
         Returns:
             (str) Json representation of this DB model.
         """
@@ -77,16 +67,11 @@ class Email(db.Model):
         """
         Get a well formed email message based off of the info in this
         DB record. Used when sending the email in the tasks module.
-        Args:
-            None
-        Kwargs:
-            None
-        Raises:
-            None
         Returns:
-            (mini_mailgun.message.Message)
+            (u'str') Well formed email message.
         """
-        return Message(self.from_addr,
-                       self.to_addr,
-                       self.subject,
-                       self.body)
+        message = create.text("plain", self.body)
+        message.headers['From'] = self.from_addr
+        message.headers['To'] = self.to_addr
+        message.headers['Subject'] = self.subject
+        return message.to_string()

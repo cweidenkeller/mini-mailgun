@@ -20,12 +20,6 @@ class Message:
         Args:
             message_json (dict): A dict containing the response from send_email
             or get_email.
-        Kwargs:
-            None
-        Raises:
-            None
-        Returns:
-            None
         """
         self.uuid = message_json['uuid']
         self.from_addr = message_json['from_addr']
@@ -50,12 +44,6 @@ class Client:
         Args:
             host (str): The host of the mini_mailgun service.
             port (str): The port you with to connect over.
-        Kwargs:
-            None
-        Raises:
-            None
-        Returns:
-            None
         """
         self.uri = 'http://{0}:{1}/v1/'.format(host, port)
         self.host = host
@@ -69,10 +57,6 @@ class Client:
         Args:
             *args (strs): Provide a list of strings to finish
             constructing the url.
-        Kwargs:
-            None
-        Raises:
-            None
         Returns:
             (str) A properly formatted request url.
         """
@@ -83,14 +67,10 @@ class Client:
         Checks response for errors and raises exceptions as needed.
         Args:
             response (requests.Response) The requests response object.
-        Kwargs:
-            None
         Raises:
             MessageAlreadySentError if the message has already been sent.
             ClientExceptionError on all other 4** series errors.
             ServerExceptionError on all 5** series errors.
-        Returns:
-            None
         """
         if response.status_code >= 500:
             raise ServerExceptionError(response.status_code)
@@ -107,8 +87,6 @@ class Client:
             to_addr (str): The recipiant's address.
             subject (str): The subject of the email.
             body (str): The body of the email.
-        Kwargs:
-            None
         Raises:
             ClientExceptionError on a 4** series error.
             ServerExceptionError on a 5** series error.
@@ -130,15 +108,11 @@ class Client:
         Delete a message if it has not already been sent.
         Args:
             uuid (str): The UUID of the message.
-        Kwargs:
-            None
         Raises:
             MessageAlreadySentOrFailedError if the message has
                 already been sent or failed to send.
             ClientExceptionError on all other 4** series errors.
             ServerExceptionError on all 5** series errors.
-        Returns:
-            None
         """
         uri = self._make_uri('email', uuid)
         response = requests.delete(uri)
@@ -149,8 +123,6 @@ class Client:
         Get info about an email in the system.
         Args:
             uuid (str): The UUID of the message.
-        Kwargs:
-            None
         Raises:
             ClientExceptionError on all 4** series errors.
             ServerExceptionError on all 5** series errors.
@@ -162,20 +134,22 @@ class Client:
         self._check_for_errors(response)
         return Message(response.json())
 
-    def get_emails(self):
+    def get_emails(self, limit=1000, offset=0):
         """
         Get a list of all emails in the system. Sent or otherwise.
-        Args:
-            None
         Kwargs:
-            None
+            limit (int): Integer to limit the number of UUID's returned
+                defaults to 1000.
+            offset (int): Offset to start the next request at.
+                defaults to 0
         Raises:
             ClientExceptionError on all 4** series errors.
             ServerExceptionError on all 5** series errors.
         Returns:
             (list) A list of email uuids.
         """
+        params = {'limit': limit, 'offset': offset}
         uri = self._make_uri('email')
-        response = requests.get(uri)
+        response = requests.get(uri, params=params)
         self._check_for_errors(response)
         return response.json()
