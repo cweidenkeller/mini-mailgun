@@ -11,7 +11,7 @@ class EmailTestCase(unittest.TestCase):
         self.assertEqual(e.to_addr, 'to')
         self.assertEqual(e.subject, 'subject')
         self.assertEqual(e.body, 'body')
-        self.assertEqual(len(e.to_msg()), 361)
+        self.assertEqual(len(e.to_msg()), 139)
 
 
 if __name__ == '__main__':

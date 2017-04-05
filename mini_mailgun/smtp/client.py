@@ -39,12 +39,12 @@ class MiniMailgunSMTP(SMTP):
         try:
             (code, resp) = self.mail(from_addr)
             if code != 250:
-                return {'code': code, 'message': resp}
+                return code, resp
             (code, resp) = self.rcpt(to_addr)
             if (code != 250) and (code != 251):
-                return {'code': code, 'message': resp}
+                return code, resp
             (code, resp) = self.data(msg)
-            return {'code': code, 'message': resp}
+            return code, resp
         finally:
             self.rset()
 
@@ -54,24 +54,17 @@ class Client():
     A reusable SMTP client.
     """
 
-    def __init__(self, host, port, username=None,
-                 password=None, use_tls=False):
+    def __init__(self, host, port, use_tls=False):
         """
         Contructor for the SMTP client.
         Args:
             host (str): The SMTP host you wish to connect to.
             port (int): The port you wish to connect over.
         Kwargs:
-            username (str): Username to be used for SMTP auth.
-                            Defaults to None.
-            password (str): The password of the user using SMTP auth.
-                            Defaults to None.
             use_tls (bool): Enable to use tls connections. Defaults to False.
         """
         self.host = host
         self.port = port
-        self.username = username
-        self.password = password
         self.use_tls = use_tls
         self.connect()
 
@@ -87,11 +80,8 @@ class Client():
         """
         try:
             self._smtp_connection = MiniMailgunSMTP(self.host, self.port)
-            self._smtp_connection.ehlo_or_helo_if_needed()
             if self.use_tls:
                 self._smtp_connection.starttls()
-            if self.username and self.password:
-                self._smtp_connection.login(self.username, self.password)
         except SMTPException as e:
             self.smtp_connection.quit()
             raise SMTPClientError(str(e))

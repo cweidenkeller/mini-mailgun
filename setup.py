@@ -10,7 +10,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=['Flask-SQLAlchemy', 'jsonschema', 'dnspython',
-                      'mysql-python', 'requests', 'redis',
+                      'mysql-python', 'requests', 'redis', 'flanker',
                       'celery', 'gevent', 'flask', 'alembic'],
     author="Conrad Weidenkeller",
     author_email="conrad@weidenkeller.com",

@@ -29,6 +29,14 @@ class MessageAlreadySentOrFailedError(MiniMailgunError):
     Raised when you attempt to delete an email that has already been sent.
     Or has failed to send.
     """
+    pass
+
+
+class EmailDeletedError(MiniMailgunError):
+    """
+    Raised when you attempt to send an email that is already deleted.
+    """
+    pass
 
 
 class SMTPClientError(MiniMailgunError):

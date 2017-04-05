@@ -9,6 +9,7 @@ from mini_mailgun.api.models import Email
 from mini_mailgun.common import utc_time
 from mini_mailgun.constants import STATUS_SENT, STATUS_FAILED, STATUS_DELETED
 from mini_mailgun.constants import CELERY_LOGGER
+from mini_mailgun.exceptions import EmailDeletedError
 from mini_mailgun.smtp.client import Client
 
 
@@ -71,17 +72,18 @@ def find_smtp_host(attempts, to_addr):
     try:
         res = dns.resolver.query(to_addr.split('@')[1], 'MX')
     except:
-        LOG.info(('No MX Records found for {0}').format(to_addr))
-        return None
+        LOG.info(('No MX Records found for {0} trying hostname.').format(
+            to_addr))
+        return to_addr.split('@')[1]
     mx_records = {}
     for mx in res:
         mx_records[mx.preference.real] = mx.exchange.to_text()
     while(len(mx_records) < attempts):
         attempts -= len(mx_records)
+    smtp_host = mx_records[sorted(mx_records.keys())[attempts - 1]]
     LOG.info('Out of {0} MX records selected {1}'.format(
-        len(mx_records),
-        mx_records[sorted(mx_records.keys())[attempts - 1]]))
-    return mx_records[sorted(mx_records.keys())[attempts - 1]]
+        len(mx_records), smtp_host))
+    return smtp_host
 
 
 @celery_app.task(acks_late=True)
@@ -94,14 +96,13 @@ def send_message(smtp_host, from_addr, to_addr, message):
         to_addr (str): The recipient's address.
         message (str): A well formed email message.
     """
-    if not smtp_host:
-        return {'code': -1, 'message': 'No MX records for host'}
-    smtp_client = Client(smtp_host,
-                         app.config['SMTP_PORT'],
-                         use_tls=app.config['USE_TLS'],
-                         username=app.config['SMTP_AUTH_USERNAME'],
-                         password=app.config['SMTP_AUTH_PASSWORD'])
-    return smtp_client.send_message(from_addr, to_addr, message)
+    try:
+        smtp_client = Client(smtp_host,
+                             app.config['SMTP_PORT'],
+                             use_tls=app.config['USE_TLS'])
+        return smtp_client.send_message(from_addr, to_addr, message)
+    except:
+        return -1, 'Unable to connect to host {0}'.format(smtp_host)
 
 
 @celery_app.task(acks_late=True)
@@ -123,17 +124,17 @@ def update_status(resp, uuid):
     """
     Async task to update message status.
     Args:
-        resp (dict): A dict containing resp code and message.
+        resp (tuple): A tuple containing resp code and message.
         uuid (string): The uuid of the email message.
     """
     email = Email.query.filter_by(uuid=uuid).first()
-    email.status_code = resp['code']
+    email.status_code = resp[0]
     LOG.info(('Email: {0} Status: {1} '
               'Response Message: {2}.').format(email.uuid,
-                                               resp['code'],
-                                               resp['message']))
-    if resp['code'] not in range(250, 253) or resp['code'] == -1:
-        if email.attempts == app.config['MAX_RETRIES']:
+                                               resp[0],
+                                               resp[1]))
+    if resp[0] not in range(250, 253):
+        if email.attempts >= app.config['MAX_RETRIES']:
             LOG.info('Email: {0} has failed to send.'.format(uuid))
             email.status = STATUS_FAILED
     else:
@@ -141,7 +142,7 @@ def update_status(resp, uuid):
         email.status = STATUS_SENT
     db.session.add(email)
     db.session.commit()
-    if (email.attempts != app.config['MAX_RETRIES']
+    if (email.attempts < app.config['MAX_RETRIES']
             and email.status != STATUS_SENT):
         LOG.info('Rescheduling Email: {0}'.format(uuid))
         chain(update_attempts.s(email.uuid, email.attempts),
